@@ -12015,12 +12015,11 @@ Run the agent.py file after setting the flags from projects/smartcab folder inst
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
 <ul>
-<li>Frequency of making bad decisions is within range [0.43 to 0.49] which is about 50% of the times, total accidental cases is about 1% of the time including major and minor accidents.</li>
-<li>Driver fails to acheive a good reliablity score according to Safety/Reliability letter-grade system, result shows that the agent reliablity score is F meaning that it has faild more than 60% in total to reach the destination. Randomness introduces about 50-50% chance which makes sense that in our case it has failed more than 60%.</li>
+<li>Frequency of making bad decisions is within range [0.43 to 0.49] which is about 50% of the times, total accidental cases is more than 25% of these bad decisions including major and minor accidents.</li>
+<li>Driver fails to acheive a good reliablity score according to Safety/Reliability letter-grade system, result shows that the agent reliablity score is F meaning that it has faild more than 60% in total to reach the destination. Randomness brings the rate of reliability to 0% and in our case it has failed more than 60%.</li>
 <li>Rewards diagaram is all negative showing that agent is getting penalized overall, and in some cases with higher major accidents it's penalized more.</li>
 <li>Due to randomness of actions, I don't observe any significant changes in the results and the frequency of total bad actions remains at 40-50% as well as the rewards around -4 to -6.</li>
-<li>Definielty not safe/reliable becuase of the overall F score in both of these measurements. Agent causes at least one major accident, such as driving through a red light with cross-traffic. And it fails to reach the destination on time
-for at least 60% of trips.</li>
+<li>Definielty not safe/reliable becuase of the overall F score in both of these measurements. Agent causes at least one major accident, such as driving through a red light with cross-traffic. And it fails to reach the destination on time for at least 60% of trips.</li>
 </ul>
 
 </div>
@@ -12081,7 +12080,7 @@ for at least 60% of trips.</li>
 </li>
 <li>Features to ignore:<ul>
 <li>input.right: this feature can be ignored becuase presence of a vehicle on the right side may not add to agent's knowledge much, if the right car is moving the traffic light should be red for the agent and the smartcab should already be idle and in other cases that smartcab is moving the traffic light for the right car should be red (the right car must be stopped) so it wouldn't add up to any of the safety score or efficiency of learning.</li>
-<li>deadline: can be a good optional feature to consider, it can improve reliablity of the learning that agent reaches the destination with a good score. But I put a higher priority for safety of the system and rewarding the agent based on actions that doesn't involve collision/violation rather than reaching the destination faster. The agent can sacrifice a little time to get to the destination safer instead of faster.</li>
+<li>deadline: can be a good optional feature to consider, it can improve reliablity of the learning that agent reaches the destination with a good score. But I put a higher priority for safety of the system and rewarding the agent based on actions that doesn't involve collision/violation rather than reaching the destination faster. The agent can sacrifice a little time to get to the destination safer instead of faster. But adding this feature would increase the size of the state.</li>
 </ul>
 </li>
 </ul>
@@ -12123,7 +12122,7 @@ for at least 60% of trips.</li>
 <li>input.left: (None, left, right, forward)</li>
 </ul>
 </li>
-<li>state space size is <code>3*2*4*4</code> which is 96 possible combination of states for the features but we also have 4 possiblity of actions for the agent <code>None, left, right, forward</code> which creates <code>4*96 -&gt; 384</code> number of possible states for the simulation and I believe this is achievable to tune policies for take good actions and learn.</li>
+<li>state space size is <code>3*2*4*4</code> which is 96 possible combination of states for the simulation and I believe this is achievable to tune policies for take good actions and learn.</li>
 </ul>
 
 </div>
@@ -12398,7 +12397,19 @@ You may also use a decaying function for $\alpha$ (the learning rate) if you so 
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
 <ul>
-<li><p>Q1: The best policy would be heading toward destination by considering traffic-light and oncoming traffic and status of cars on the left side, overall the safety is highest priority and any chances of collision should be considered as a huge penalty and policy should always stop the car behind the red traffic, or if there is a chance of collision on right turn with the car on the left policy should recommend stopping, reliabilty is the second priority to arrive at the destination on time.</p>
+<li><p>Q1: The best policy would be heading toward destination by considering traffic-light and oncoming traffic and status of cars on the left side, overall the safety is highest priority and any chances of collision should be considered as a huge penalty and policy should always stop the car behind the red traffic, or if there is a chance of collision on right turn with the car on the left policy should recommend stopping, reliabilty is the second priority to arrive at the destination on time. Here are the main conditions for policies:</p>
+<ul>
+<li>if the light is red:<ul>
+<li>The smartcab can turn right when inputs['left'] != 'forward'</li>
+</ul>
+</li>
+<li>if light is green:<ul>
+<li>The smartcab can turn left if inputs['oncoming'] != 'forward'</li>
+<li>The smartcab can turn right if inputs['oncoming'] != 'left'</li>
+<li>The smartcab can go forward if inputs['oncoming'] != 'left'</li>
+</ul>
+</li>
+</ul>
 </li>
 <li><p>Q2: For the majority of the states the policies were perfect which makes sense as the learning-rate was very slow and the model is trained on almost 5000 trials, however I found a couple of them that could be better tuned to improve reliability and also avoid collision.</p>
 </li>
@@ -12437,7 +12448,7 @@ You may also use a decaying function for $\alpha$ (the learning rate) if you so 
       <td style="text-align:justify">destination is on the right direction and the light is green, so the best action would be just turning right, the next best action was forward: 0.05 meaning that the car can go forward but it'd get far from the destination so it has a lower value than just making a right turn</td>
   </tr>
 </table></li>
-<li><p>Q4: some of the cases where agent didn't make the best decision:</p>
+<li><p>Q4: here is 1 case where agent didn't make the best decision:</p>
 <table>
   <tr>
       <th style="text-align:center">Waypoint</th>
@@ -12446,14 +12457,6 @@ You may also use a decaying function for $\alpha$ (the learning rate) if you so 
       <th style="text-align:center">Left</th>
       <th style="text-align:center">Best_Action</th>
       <th style="text-align:center">Description</th>
-  </tr>
-  <tr>
-      <td>left</td>
-      <td>green</td>
-      <td>forward</td>
-      <td>None</td>
-      <td>right : 0.45</td>
-      <td style="text-align:justify">destination is on the left and the light is green, so I expect the car to turn left toward the destination or at least go forward but the model's best action is turning right which might be causing delay in arriving to the target and reduce reliability score</td>
   </tr>
   <tr>
       <td>left</td>

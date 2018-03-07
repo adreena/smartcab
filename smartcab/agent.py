@@ -83,7 +83,7 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
         
         # Set 'state' as a tuple of relevant data for the agent        
-        state = '{0}-{1}-{2}-{3}'.format(waypoint, inputs['light'], str(inputs['oncoming']), str(inputs['left']))
+        state = (waypoint, inputs['light'], str(inputs['oncoming']), str(inputs['left']))
 
         return state
 
@@ -122,7 +122,7 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        if state not in self.Q:
+        if self.learning and state not in self.Q:
             self.Q[state] = self.initial_actions_Qvalue.copy()
 
         return
@@ -148,10 +148,7 @@ class LearningAgent(Agent):
             action = self.valid_actions[random.randint(0, len(self.valid_actions)-1)]
         else :
             max_Q, max_actions = self.get_maxQ(state)
-            if len(max_actions) > 1:
-                action = max_actions[random.randint(0, len(max_actions)-1)]
-            else:
-                action = max_actions[0]
+            action = random.choice(max_actions)
         return action
 
 
